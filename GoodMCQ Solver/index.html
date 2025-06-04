@@ -1,0 +1,2068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MCQ Solver App</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #111111;
+            --bg-tertiary: #1a1a1a;
+            --bg-elevated: #222222;
+            --border-color: #2a2a2a;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+            --text-muted: #666666;
+            --accent-primary: #3b82f6;
+            --accent-hover: #2563eb;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --border-radius: 8px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            font-weight: 400;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 16px 24px;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        header .logo {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.025em;
+        }
+
+        header .nav-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        header button {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        header button:hover {
+            background: var(--bg-elevated);
+            border-color: var(--accent-primary);
+            transform: translateY(-1px);
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            margin-top: 65px;
+        }
+
+        /* Paper Selector Styles */
+        .paper-selector {
+            display: flex;
+            width: 100%;
+            height: calc(100vh - 65px);
+            gap: 1px;
+            background: var(--border-color);
+        }
+
+        .panel {
+            flex: 1;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            padding: 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel:first-child {
+            border-right: 1px solid var(--border-color);
+        }
+
+        .panel h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            letter-spacing: -0.025em;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            background: var(--bg-elevated);
+        }
+
+        .search-box::placeholder {
+            color: var(--text-muted);
+        }
+
+        .subject-item, .paper-item {
+            padding: 12px 16px;
+            margin: 4px 0;
+            cursor: pointer;
+            border-radius: var(--border-radius);
+            transition: all 0.2s ease;
+            font-size: 14px;
+            font-weight: 500;
+            border: 1px solid transparent;
+        }
+
+        .subject-item:hover, .paper-item:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--border-color);
+        }
+
+        .subject-item.selected, .paper-item.selected {
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+        }
+
+        /* Paper View Styles */
+        .paper-view {
+            display: none;
+            width: 100%;
+            height: calc(100vh - 65px);
+            background: var(--bg-primary);
+        }
+
+        .paper-header {
+            background: var(--bg-secondary);
+            padding: 16px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .paper-header-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .mobile-toggle-btn {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            z-index: 1000;
+            box-shadow: var(--shadow-lg);
+            border: 2px solid var(--accent-primary);
+            min-width: 80px;
+            backdrop-filter: blur(10px);
+        }
+
+        .mobile-toggle-btn:hover {
+            background: var(--accent-hover);
+            border-color: var(--accent-hover);
+            transform: translateX(-50%) translateY(-2px);
+            box-shadow: 0 12px 20px -5px rgba(59, 130, 246, 0.4);
+        }
+
+        .mobile-toggle-btn:active {
+            transform: translateX(-50%) translateY(0px);
+            box-shadow: var(--shadow);
+        }
+
+        /* Add safe area for mobile devices with home indicators */
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+            .mobile-toggle-btn {
+                bottom: calc(20px + env(safe-area-inset-bottom));
+            }
+        }
+
+        .paper-content {
+            display: flex;
+            height: calc(100vh - 130px);
+        }
+
+        .pdf-viewer {
+            flex: 1;
+            background: var(--bg-tertiary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            border-right: 1px solid var(--border-color);
+            padding: 24px;
+        }
+
+        .mcq-solver {
+            width: 320px;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 0 24px 24px 24px;
+        }
+
+        .solver-header {
+            text-align: center;
+            padding: 24px 0 20px 0;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            flex-shrink: 0;
+        }
+
+        .solver-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            letter-spacing: -0.025em;
+        }
+
+        #timer {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .score-display {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            padding: 16px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .score-display > div:first-child {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .score-display > div:nth-child(2) {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .score-breakdown {
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .solver-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+        }
+
+        .question-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 12px;
+            border-radius: var(--border-radius);
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+
+        .question-number {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-right: 12px;
+            background: var(--bg-elevated);
+            border-radius: 6px;
+            font-size: 14px;
+            border: 1px solid var(--border-color);
+        }
+
+        .answer-options {
+            display: flex;
+            gap: 8px;
+        }
+
+        .answer-btn {
+            width: 32px;
+            height: 32px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .answer-btn:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--accent-primary);
+            transform: translateY(-1px);
+        }
+
+        .answer-btn.selected {
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+        }
+
+        .answer-btn.correct {
+            background: var(--success);
+            color: white;
+            border-color: var(--success);
+        }
+
+        .answer-btn.incorrect {
+            background: var(--error);
+            color: white;
+            border-color: var(--error);
+        }
+
+        .question-row.correct-answer {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: var(--success);
+        }
+
+        .question-row.incorrect-answer {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: var(--error);
+        }
+
+        .finish-btn, .back-btn {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 16px;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .finish-btn:hover, .back-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        .back-btn {
+            width: auto;
+            margin: 0;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        .results-display {
+            margin-top: 20px;
+            padding: 20px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            text-align: center;
+        }
+
+        .results-display h4 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--success);
+        }
+
+        .attempts-tab {
+            display: none;
+            padding: 24px;
+            color: var(--text-primary);
+            background: var(--bg-secondary);
+        }
+
+        .tab-nav {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 16px;
+        }
+
+        .tab-btn {
+            padding: 8px 16px;
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .tab-btn.active {
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+        }
+
+        .tab-btn:hover:not(.active) {
+            background: var(--bg-elevated);
+        }
+
+        .attempt-item {
+            background: var(--bg-tertiary);
+            padding: 16px;
+            margin: 12px 0;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+        }
+
+        .loading {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            padding: 24px 32px;
+            border-radius: var(--border-radius);
+            z-index: 1000;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-lg);
+            font-weight: 500;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* Debugging Tool Styles */
+        .debug-tool {
+            position: fixed;
+            top: 80px;
+            right: 16px;
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            padding: 16px;
+            border-radius: var(--border-radius);
+            max-width: 320px;
+            z-index: 2000;
+            display: none;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .debug-tool pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin: 0;
+            font-size: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-secondary);
+        }
+
+        .debug-btn {
+            display: none;
+            position: fixed;
+            bottom: 16px;
+            right: 16px;
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            z-index: 2000;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .debug-btn:hover {
+            background: var(--bg-tertiary);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* Debugging Tool Styles */
+        .debug-tool {
+            position: fixed;
+            top: 80px;
+            right: 16px;
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            padding: 16px;
+            border-radius: var(--border-radius);
+            max-width: 320px;
+            z-index: 2000;
+            display: none;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .debug-tool pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin: 0;
+            font-size: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-secondary);
+        }
+
+        .debug-btn {
+            display: none;
+            position: fixed;
+            bottom: 16px;
+            right: 16px;
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            z-index: 2000;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .debug-btn:hover {
+            background: var(--bg-tertiary);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 1024px) {
+            .mcq-solver {
+                width: 300px;
+            }
+            
+            .pdf-viewer {
+                font-size: 20px;
+                padding: 16px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                overflow-x: hidden;
+            }
+
+            header {
+                padding: 12px 16px;
+                position: relative;
+            }
+
+            header .logo {
+                font-size: 18px;
+            }
+
+            header button {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+
+            .container {
+                margin-top: 0;
+                height: calc(100vh - 50px);
+            }
+
+            .paper-selector {
+                flex-direction: column;
+                height: calc(100vh - 50px);
+                gap: 0;
+            }
+            
+            .panel {
+                min-height: 45vh;
+                padding: 16px;
+            }
+
+            .panel h2 {
+                font-size: 16px;
+                margin-bottom: 16px;
+            }
+
+            /* Mobile Paper View */
+            .paper-view {
+                height: calc(100vh - 50px);
+            }
+
+            .paper-header {
+                padding: 12px 16px;
+                font-size: 14px;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .paper-header-controls {
+                gap: 8px;
+            }
+
+            .mobile-toggle-btn {
+                display: block;
+            }
+
+            .paper-content {
+                flex-direction: column;
+                height: calc(100vh - 100px);
+            }
+
+            .pdf-viewer {
+                height: 100%;
+                min-height: 250px;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+                font-size: 16px;
+                padding: 16px;
+                display: block;
+            }
+
+            .mcq-solver {
+                width: 100%;
+                height: 100%;
+                border-left: none;
+                padding: 16px;
+                overflow-y: auto;
+                display: none;
+            }
+
+            .mcq-solver.active {
+                display: flex;
+            }
+
+            .pdf-viewer.active {
+                display: flex;
+            }
+
+            .solver-header {
+                padding: 16px 0 12px 0;
+                margin-bottom: 16px;
+            }
+
+            .solver-header h3 {
+                font-size: 16px;
+                margin-bottom: 12px;
+            }
+
+            #timer {
+                font-size: 14px;
+                margin-bottom: 12px;
+            }
+
+            .score-display {
+                padding: 12px;
+                margin-bottom: 16px;
+            }
+
+            .score-display > div:first-child {
+                font-size: 16px;
+                margin-bottom: 8px;
+            }
+
+            .score-display > div:nth-child(2) {
+                font-size: 14px;
+                margin-bottom: 8px;
+            }
+
+            .question-row {
+                margin-bottom: 8px;
+                padding: 10px;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .question-number {
+                width: 28px;
+                height: 28px;
+                font-size: 12px;
+                margin-right: 8px;
+                flex-shrink: 0;
+            }
+
+            .answer-options {
+                flex: 1;
+                justify-content: flex-start;
+                min-width: 140px;
+            }
+
+            .answer-btn {
+                width: 28px;
+                height: 28px;
+                font-size: 12px;
+            }
+
+            .finish-btn, .back-btn {
+                padding: 10px 14px;
+                font-size: 13px;
+                margin-top: 12px;
+            }
+
+            .back-btn {
+                padding: 6px 12px;
+            }
+
+            .attempts-tab {
+                padding: 16px;
+            }
+
+            .tab-nav {
+                flex-wrap: wrap;
+                gap: 8px;
+                margin-bottom: 16px;
+            }
+
+            .tab-btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header {
+                padding: 10px 12px;
+            }
+
+            header .logo {
+                font-size: 16px;
+            }
+
+            header .nav-buttons {
+                gap: 8px;
+            }
+
+            header button {
+                padding: 5px 10px;
+                font-size: 11px;
+            }
+
+            .container {
+                height: calc(100vh - 45px);
+            }
+
+            .panel {
+                padding: 12px;
+                min-height: 42vh;
+            }
+
+            .panel h2 {
+                font-size: 14px;
+                margin-bottom: 12px;
+            }
+
+            .search-box {
+                padding: 10px 12px;
+                font-size: 13px;
+                margin-bottom: 16px;
+            }
+
+            .subject-item, .paper-item {
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+
+            .paper-view {
+                height: calc(100vh - 45px);
+            }
+
+            .paper-header {
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+
+            .paper-content {
+                height: calc(100vh - 85px);
+            }
+
+            .pdf-viewer {
+                height: 35vh;
+                min-height: 200px;
+                font-size: 14px;
+                padding: 12px;
+            }
+
+            .mcq-solver {
+                height: 65vh;
+                padding: 12px;
+            }
+
+            .solver-header {
+                padding: 12px 0 10px 0;
+            }
+
+            .solver-header h3 {
+                font-size: 14px;
+                margin-bottom: 10px;
+            }
+
+            #timer {
+                font-size: 13px;
+                margin-bottom: 10px;
+            }
+
+            .score-display {
+                padding: 10px;
+                margin-bottom: 12px;
+            }
+
+            .score-display > div:first-child {
+                font-size: 14px;
+                margin-bottom: 6px;
+            }
+
+            .score-display > div:nth-child(2) {
+                font-size: 13px;
+                margin-bottom: 6px;
+            }
+
+            .score-breakdown {
+                font-size: 11px;
+            }
+
+            .question-row {
+                margin-bottom: 6px;
+                padding: 8px;
+                align-items: flex-start;
+            }
+
+            .question-number {
+                width: 24px;
+                height: 24px;
+                font-size: 11px;
+                margin-right: 6px;
+                margin-top: 2px;
+            }
+
+            .answer-options {
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+
+            .answer-btn {
+                width: 24px;
+                height: 24px;
+                font-size: 11px;
+            }
+
+            .finish-btn {
+                padding: 8px 12px;
+                font-size: 12px;
+                margin-top: 10px;
+            }
+
+            .back-btn {
+                padding: 5px 10px;
+                font-size: 12px;
+            }
+
+            .results-display {
+                margin-top: 16px;
+                padding: 16px;
+            }
+
+            .results-display h4 {
+                font-size: 14px;
+                margin-bottom: 10px;
+            }
+
+            .attempts-tab {
+                padding: 12px;
+            }
+
+            .tab-nav {
+                margin-bottom: 12px;
+            }
+
+            .attempt-item {
+                padding: 12px;
+                margin: 8px 0;
+            }
+
+            .debug-tool {
+                top: 60px;
+                right: 8px;
+                left: 8px;
+                max-width: none;
+                padding: 12px;
+            }
+
+            .debug-btn {
+                bottom: 12px;
+                right: 12px;
+                padding: 8px 12px;
+                font-size: 11px;
+            }
+
+            /* Improve touch targets */
+            .subject-item, .paper-item, .answer-btn, .tab-btn {
+                min-height: 44px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .answer-btn {
+                min-height: 32px;
+                min-width: 32px;
+            }
+        }
+
+        /* Landscape mobile orientation */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .paper-content {
+                flex-direction: row;
+            }
+
+            .pdf-viewer {
+                height: calc(100vh - 100px);
+                width: 60%;
+                border-right: 1px solid var(--border-color);
+                border-bottom: none;
+            }
+
+            .mcq-solver {
+                width: 40%;
+                height: calc(100vh - 100px);
+                border-left: 1px solid var(--border-color);
+            }
+        }
+
+        /* Ultra-wide mobile screens */
+        @media (max-width: 480px) and (orientation: landscape) {
+            .pdf-viewer {
+                width: 55%;
+            }
+
+            .mcq-solver {
+                width: 45%;
+            }
+
+            .solver-header {
+                padding: 8px 0 6px 0;
+            }
+
+            .question-row {
+                padding: 6px;
+                margin-bottom: 4px;
+            }
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
+    <script>
+        // Configure PDF.js worker
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.worker.min.js';
+        }
+    </script>
+</head>
+<body>
+    <header>
+        <div class="logo">PaperSolver</div>
+        <div class="nav-buttons">
+            <button onclick="goHome()">Home</button>
+            <button onclick="viewResults()">Results</button>
+        </div>
+    </header>
+    <div class="container">
+        <!-- Paper Selector -->
+        <div class="paper-selector" id="paperSelector">
+            <div class="panel">
+                <h2>Subject</h2>
+                <input type="text" class="search-box" placeholder="Search Subject" id="subjectSearch">
+                <div id="subjectList">
+                    <!-- Subjects will be populated here -->
+                </div>
+            </div>
+            <div class="panel">
+                <h2>Select Paper</h2>
+                <input type="text" class="search-box" placeholder="Search Paper" id="paperSearch">
+                <div id="paperList">
+                    <!-- Papers will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Paper View -->
+        <div class="paper-view" id="paperView">
+            <div class="paper-header">
+                <span id="paperTitle">9702 S24 QP 21</span>
+                <div class="paper-header-controls">
+                    <button class="back-btn" onclick="goBack()">Back</button>
+                </div>
+            </div>
+            <div class="paper-content">
+                <div class="pdf-viewer" id="pdfViewer">
+                    PDF VIEW
+                </div>
+                <div class="mcq-solver" id="mcqSolver">
+                    <div class="solver-header">
+                        <h3>MCQ Solver</h3>
+                        <div id="timer">
+                            Time: <span id="timerMinutes">00</span>:<span id="timerSeconds">00</span>
+                        </div>
+                        <div class="score-display" id="scoreDisplay" style="display: none;">
+                            <div>Your Score: <span id="currentScore">0/0</span></div>
+                            <div>Time: <span id="finalTime">00:00</span></div>
+                            <div class="score-breakdown">
+                                <!-- Score breakdown content -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="solver-content">
+                        <div id="questionContainer">
+                            <!-- Questions will be populated here -->
+                        </div>
+                        <button class="finish-btn" id="finishBtn" onclick="finishPaper()">Finish Paper</button>
+                        <div class="results-display" id="resultsDisplay" style="display: none;">
+                            <h4>Attempt Complete!</h4>
+                            <p>Your answers have been saved.</p>
+                            <button class="finish-btn" onclick="startNewAttempt()">New Attempt</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attempts Tab -->
+        <div class="attempts-tab" id="attemptsTab">
+            <div class="tab-nav">
+                <button class="tab-btn active" onclick="showTab('selector')">Select Paper</button>
+                <button class="tab-btn" onclick="showTab('attempts')">Completed Papers</button>
+            </div>
+            <div id="attemptsList">
+                <!-- Completed attempts will be shown here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Mobile Toggle Button -->
+    <button class="mobile-toggle-btn" id="mobileToggleBtn" onclick="toggleMobileView()">
+        <span id="toggleText">📝 MCQ</span>
+    </button>
+
+    <div class="loading" id="loading">Loading...</div>
+
+    <!-- Debugging Tool -->
+    <div class="debug-tool" id="debugTool">
+        <strong>Debug Information:</strong>
+        <pre id="parsedMarkingScheme"></pre>
+    </div>
+
+    <button class="debug-btn" onclick="toggleDebugTool()" style="display: block; position: fixed; bottom: 10px; right: 10px; background: #444; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer; z-index: 2000;">Debug</button>
+
+    <script>
+        let availableSubjects = {};
+        let availableMarkingSchemes = {};
+
+        function generateMarkingScheme(count) {
+            const answers = ['A', 'B', 'C', 'D'];
+            let scheme = '';
+            for (let i = 1; i <= count; i++) {
+                const randomAnswer = answers[Math.floor(Math.random() * 4)];
+                scheme += `${i} ${randomAnswer}\n`;
+            }
+            return scheme;
+        }
+
+        let currentSubject = '';
+        let currentPaper = '';
+        let currentAnswers = {};
+        let correctAnswers = {};
+        let isFinished = false;
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSubjectsFromDirectory();
+        });
+
+        async function loadSubjectsFromDirectory() {
+            try {
+                // For immediate testing, let's manually add the known subjects first
+                availableSubjects = {
+                    'Physics 9702': {
+                        papers: ['9702_s24_qp_11'] // We know this file exists
+                    }
+                };
+                
+                console.log('Manual subjects loaded:', availableSubjects); // Debug
+                
+                // Display subjects immediately - important to make sure we see Physics
+                displaySubjects();
+                console.log('After displaySubjects, subject list contains:', document.getElementById('subjectList').innerHTML);
+                
+                // Then try to discover more subjects dynamically
+                await discoverSubjects();
+            } catch (error) {
+                console.log('Could not access Subjects directory:', error.message);
+                // If discovery fails, we still have the manual subjects
+                if (Object.keys(availableSubjects).length === 0) {
+                    displayNoSubjectsMessage();
+                }
+            }
+        }
+
+        async function discoverSubjects() {
+            // Common subject codes to check for
+            const commonSubjects = [
+                { code: '9702', name: 'Physics' },
+                { code: '9701', name: 'Chemistry' },
+                { code: '9700', name: 'Biology' },
+                { code: '9708', name: 'Economics' },
+                { code: '9709', name: 'Mathematics' },
+                { code: '9093', name: 'English Language' },
+                { code: '9618', name: 'Computer Science' },
+                { code: '7115', name: 'Business Studies' }
+            ];
+
+            let foundSubjects = {};
+
+            for (const subject of commonSubjects) {
+                try {
+                    // Try to access the subject folder
+                    const subjectResponse = await fetch(`./Subjects/${subject.name} ${subject.code}/`);
+                    if (subjectResponse.ok) {
+                        const papers = await discoverPapersInSubject(subject.name, subject.code);
+                        if (papers.length > 0) {
+                            foundSubjects[`${subject.name} ${subject.code}`] = { papers };
+                        }
+                    }
+                } catch (error) {
+                    // Subject folder doesn't exist, skip
+                    continue;
+                }
+            }
+
+            if (Object.keys(foundSubjects).length === 0 && Object.keys(availableSubjects).length === 0) {
+                displayNoSubjectsMessage();
+            } else {
+                // Merge newly found subjects with manually added ones
+                availableSubjects = { ...availableSubjects, ...foundSubjects };
+                displaySubjects();
+                console.log('After dynamic discovery, subjects are:', Object.keys(availableSubjects));
+            }
+        }
+
+        async function discoverPapersInSubject(subjectName, subjectCode) {
+            const papers = [];
+            const seasons = ['s', 'w', 'm']; // summer, winter, march
+            const years = ['24', '23', '22', '21']; // recent years
+            const variants = ['11', '12', '13', '21', '22', '23']; // common variants
+
+            for (const season of seasons) {
+                for (const year of years) {
+                    for (const variant of variants) {
+                        try {
+                            const paperCode = `${subjectCode}_${season}${year}_qp_${variant}`;
+                            const paperResponse = await fetch(`./Subjects/${subjectName} ${subjectCode}/${paperCode}.pdf`);
+                            if (paperResponse.ok) {
+                                // Check if corresponding marking scheme exists
+                                const msCode = paperCode.replace('_qp_', '_ms_');
+                                const msResponse = await fetch(`./Subjects/${subjectName} ${subjectCode}/${msCode}.pdf`);
+                                if (msResponse.ok) {
+                                    papers.push(paperCode);
+                                    // Store the marking scheme text for later use
+                                    const msText = await msResponse.text();
+                                    availableMarkingSchemes[msCode] = msText;
+                                }
+                            }
+                        } catch (error) {
+                            // Paper doesn't exist, continue
+                            continue;
+                        }
+                    }
+                }
+            }
+
+            return papers;
+        }
+
+        function displayNoSubjectsMessage() {
+            const subjectList = document.getElementById('subjectList');
+            subjectList.innerHTML = `
+                <div style="text-align: center; color: var(--text-muted); margin-top: 60px; padding: 20px;">
+                    <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">📚</div>
+                    <div style="font-size: 16px; font-weight: 500; margin-bottom: 8px; color: var(--text-secondary);">No subjects available</div>
+                    <div style="font-size: 14px; line-height: 1.5;">Please ensure the Subjects folder exists with proper subject folders and papers.</div>
+                </div>
+            `;
+        }
+
+        function displaySubjects() {
+            const subjectList = document.getElementById('subjectList');
+            subjectList.innerHTML = '';
+            
+            console.log('displaySubjects called with subjects:', Object.keys(availableSubjects));
+            
+            if (Object.keys(availableSubjects).length === 0) {
+                displayNoSubjectsMessage();
+                return;
+            }
+            
+            Object.keys(availableSubjects).forEach(subject => {
+                const div = document.createElement('div');
+                div.className = 'subject-item';
+                div.textContent = subject;
+                div.dataset.subject = subject; // Add data attribute for easier selection
+                div.addEventListener('click', (event) => selectSubject(subject, event));
+                subjectList.appendChild(div);
+                console.log('Added subject to UI:', subject);
+            });
+        }
+
+        function selectSubject(subject, event) {
+            currentSubject = subject;
+            
+            // Update UI
+            document.querySelectorAll('.subject-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // Find the element we clicked and add selected class
+            const clickedElement = event ? event.target : document.querySelector(`.subject-item[data-subject="${subject}"]`);
+            if (clickedElement) {
+                clickedElement.classList.add('selected');
+            }
+            
+            loadPapers(subject);
+        }
+
+        function loadPapers(subject) {
+            const paperList = document.getElementById('paperList');
+            paperList.innerHTML = '';
+            
+            if (availableSubjects[subject] && availableSubjects[subject].papers.length > 0) {
+                availableSubjects[subject].papers.forEach(paper => {
+                    const div = document.createElement('div');
+                    div.className = 'paper-item';
+                    div.textContent = formatPaperName(paper);
+                    div.dataset.paper = paper; // Add data attribute for easier selection
+                    div.addEventListener('click', (event) => selectPaper(paper, event));
+                    paperList.appendChild(div);
+                });
+            } else {
+                paperList.innerHTML = `
+                    <div style="text-align: center; color: var(--text-muted); margin-top: 40px; padding: 20px;">
+                        <div style="font-size: 32px; margin-bottom: 12px; opacity: 0.5;">📄</div>
+                        <div style="font-size: 14px; color: var(--text-secondary);">No papers available for this subject.</div>
+                    </div>
+                `;
+            }
+        }
+
+        function formatPaperName(paperCode) {
+            // Convert 9702_s24_qp_12 to "Summer 2024 Paper 1 Variant 2"
+            const parts = paperCode.split('_');
+            const series = parts[1];
+            const variant = parts[3];
+            
+            const seasonMap = { 's': 'Summer', 'w': 'Winter', 'm': 'March' };
+            const year = '20' + series.substring(1);
+            const season = seasonMap[series[0]] || series[0].toUpperCase();
+            const paperNum = variant[0];
+            const variantNum = variant[1];
+            
+            return `${season} ${year} Paper ${paperNum} Variant ${variantNum}`;
+        }
+
+        function selectPaper(paper, event) {
+            currentPaper = paper;
+            
+            // Update UI
+            document.querySelectorAll('.paper-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // Find the clicked element and add the selected class
+            const clickedElement = event ? event.target : document.querySelector(`.paper-item[data-paper="${paper}"]`);
+            if (clickedElement) {
+                clickedElement.classList.add('selected');
+            }
+            
+            // Load the paper
+            setTimeout(() => loadPaper(paper), 300);
+        }
+
+        let timerInterval;
+        let timerSeconds = 0;
+
+        function startTimer() {
+            const timerMinutesElement = document.getElementById('timerMinutes');
+            const timerSecondsElement = document.getElementById('timerSeconds');
+
+            timerInterval = setInterval(() => {
+                timerSeconds++;
+                const minutes = Math.floor(timerSeconds / 60);
+                const seconds = timerSeconds % 60;
+
+                timerMinutesElement.textContent = minutes.toString().padStart(2, '0');
+                timerSecondsElement.textContent = seconds.toString().padStart(2, '0');
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            // Reset timer should happen after saving the attempt
+        }
+
+        async function loadPaper(paper) {
+            document.getElementById('loading').style.display = 'block';
+
+            try {
+                // Try to load the actual PDF
+                const pdfPath = `./Subjects/${currentSubject}/${paper}.pdf`;
+                console.log('Attempting to load PDF from:', pdfPath); // Debug log
+                
+                // First check if the PDF exists
+                const pdfResponse = await fetch(pdfPath);
+                console.log('PDF fetch response status:', pdfResponse.status); // Debug
+
+                const pdfViewer = document.getElementById('pdfViewer');
+                
+                if (pdfResponse.ok) {
+                    // Update PDF viewer with actual PDF
+                    if (pdfViewer) {
+                        // Create a more robust PDF viewer with multiple fallback options
+                        pdfViewer.innerHTML = `
+                            <div style="width: 100%; height: 100%; position: relative;">
+                                <embed id="pdfEmbed" src="${pdfPath}" type="application/pdf" style="width: 100%; height: 100%; border: none;">
+                                <iframe id="pdfIframe" src="${pdfPath}" style="width: 100%; height: 100%; border: none; display: none;"></iframe>
+                                <div id="pdfFallback" style="display: none; text-align: center; padding: 40px; height: 100%; flex-direction: column; justify-content: center; align-items: center;">
+                                    <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.7;">📄</div>
+                                    <div style="font-size: 18px; font-weight: 500; margin-bottom: 16px;">PDF Viewer</div>
+                                    <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 20px;">Click below to open the PDF in a new tab</div>
+                                    <a href="${pdfPath}" target="_blank" style="background: var(--accent-primary); color: white; padding: 12px 24px; border-radius: var(--border-radius); text-decoration: none; font-weight: 500; transition: all 0.2s ease;">
+                                        📖 Open PDF
+                                    </a>
+                                </div>
+                            </div>
+                        `;
+                        
+                        // Implement progressive fallback strategy
+                        setTimeout(() => {
+                            const embed = document.getElementById('pdfEmbed');
+                            const iframe = document.getElementById('pdfIframe');
+                            const fallback = document.getElementById('pdfFallback');
+                            
+                            console.log('Checking PDF embed status...');
+                            
+                            // Check if embed loaded properly by testing its dimensions and content
+                            const embedWorked = embed && embed.offsetHeight > 100 && embed.offsetWidth > 100;
+                            
+                            if (!embedWorked) {
+                                console.log('Embed failed, trying iframe...');
+                                embed.style.display = 'none';
+                                iframe.style.display = 'block';
+                                
+                                // Give iframe time to load, then check if it worked
+                                setTimeout(() => {
+                                    // Check if iframe loaded
+                                    try {
+                                        const iframeWorked = iframe.offsetHeight > 100 && iframe.offsetWidth > 100;
+                                        if (!iframeWorked) {
+                                            console.log('Iframe also failed, showing fallback');
+                                            iframe.style.display = 'none';
+                                            fallback.style.display = 'flex';
+                                        } else {
+                                            console.log('Iframe loaded successfully');
+                                        }
+                                    } catch (e) {
+                                        console.log('Iframe failed with error, showing fallback');
+                                        iframe.style.display = 'none';
+                                        fallback.style.display = 'flex';
+                                    }
+                                }, 1500);
+                            } else {
+                                console.log('Embed loaded successfully');
+                            }
+                        }, 1000);
+                        
+                        console.log('PDF viewer updated successfully:', pdfPath); // Debug
+                    }
+                } else {
+                    // If PDF not found, show placeholder
+                    if (pdfViewer) {
+                        pdfViewer.innerHTML = `
+                            <div style="text-align: center; padding: 40px; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                                <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">❌</div>
+                                <div style="font-size: 18px; font-weight: 500; margin-bottom: 8px; color: var(--error);">PDF not found</div>
+                                <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">The PDF file could not be loaded</div>
+                                <div style="font-size: 12px; color: var(--text-muted); margin-top: 8px; word-break: break-all;">Path: ${pdfPath}</div>
+                                <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Status: ${pdfResponse.status}</div>
+                            </div>
+                        `;
+                        console.error('PDF not found:', pdfPath, 'Status:', pdfResponse.status); // Debug
+                    }
+                }
+
+                // Hide selector, show paper view
+                document.getElementById('paperSelector').style.display = 'none';
+                document.getElementById('paperView').style.display = 'block';
+
+                // Show mobile toggle button only when in mobile view (≤768px) and in paper view
+                if (window.innerWidth <= 768) {
+                    document.getElementById('mobileToggleBtn').style.display = 'block';
+                    // Initialize mobile view
+                    setTimeout(() => {
+                        initializeMobileView();
+                    }, 100);
+                } else {
+                    // On desktop, hide mobile toggle button and make sure both viewers are visible
+                    document.getElementById('mobileToggleBtn').style.display = 'none';
+                    const pdfViewerElement = document.getElementById('pdfViewer');
+                    const mcqSolver = document.getElementById('mcqSolver');
+                    if (pdfViewerElement && mcqSolver) {
+                        pdfViewerElement.style.display = 'flex';
+                        mcqSolver.style.display = 'flex';
+                    }
+                }
+
+                // Update paper title
+                document.getElementById('paperTitle').textContent = `${currentSubject} - ${formatPaperName(paper)}`;
+
+                // Load marking scheme and create questions
+                loadMarkingScheme(paper);
+
+                // Start the timer
+                startTimer();
+
+            } catch (error) {
+                console.error('Error loading paper:', error);
+                alert('Error loading paper: ' + error.message);
+                goBack();
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        async function fetchAndParseMarkingScheme(msPath) {
+            try {
+                const response = await fetch(msPath);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch marking scheme PDF');
+                }
+
+                const arrayBuffer = await response.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                let textContent = '';
+
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const text = await page.getTextContent();
+                    text.items.forEach(item => {
+                        textContent += item.str + ' ';
+                    });
+                }
+
+                return parseMarkingScheme(textContent);
+            } catch (error) {
+                console.error('Error parsing marking scheme:', error);
+                return null;
+            }
+        }
+
+        function parseMarkingScheme(text) {
+            // Look for patterns like "1 A", "2 B", etc.
+            const regex = /\b(\d+)\s+([A-D])\b/g;
+            const matches = [...text.matchAll(regex)];
+
+            if (matches.length === 0) return null;
+
+            // Sort by question number
+            matches.sort((a, b) => parseInt(a[1]) - parseInt(b[1]));
+
+            // Extract answers in order
+            return matches.map(match => match[2]);
+        }
+
+        async function loadMarkingScheme(paper) {
+            const msCode = paper.replace('_qp_', '_ms_');
+            const msPath = `./Subjects/${currentSubject}/${msCode}.pdf`;
+
+            const parsedScheme = await fetchAndParseMarkingScheme(msPath);
+            if (parsedScheme) {
+                correctAnswers = parsedScheme.reduce((acc, answer, index) => {
+                    acc[index + 1] = answer;
+                    return acc;
+                }, {});
+
+                const questionCount = Object.keys(correctAnswers).length;
+                if (questionCount > 0) {
+                    createQuestionInterface(questionCount);
+                } else {
+                    alert('Error: Could not parse marking scheme for this paper.');
+                    goBack();
+                }
+            } else {
+                alert('Error: Marking scheme not found or could not be parsed.');
+                goBack();
+            }
+        }
+
+        function createQuestionInterface(questionCount) {
+            const container = document.getElementById('questionContainer');
+            container.innerHTML = '';
+            
+            currentAnswers = {};
+            isFinished = false;
+            
+            // Reset solver display
+            document.getElementById('timer').style.display = 'block';
+            document.getElementById('scoreDisplay').style.display = 'none';
+            document.getElementById('resultsDisplay').style.display = 'none';
+            document.getElementById('finishBtn').style.display = 'block';
+            
+            for (let i = 1; i <= questionCount; i++) {
+                const questionRow = document.createElement('div');
+                questionRow.className = 'question-row';
+                questionRow.id = `question-${i}`;
+                
+                const questionNumber = document.createElement('div');
+                questionNumber.className = 'question-number';
+                questionNumber.textContent = i;
+                
+                const answerOptions = document.createElement('div');
+                answerOptions.className = 'answer-options';
+                
+                ['A', 'B', 'C', 'D'].forEach(option => {
+                    const btn = document.createElement('button');
+                    btn.className = 'answer-btn';
+                    btn.textContent = option;
+                    btn.addEventListener('click', () => selectAnswer(i, option, btn));
+                    answerOptions.appendChild(btn);
+                });
+                
+                questionRow.appendChild(questionNumber);
+                questionRow.appendChild(answerOptions);
+                container.appendChild(questionRow);
+            }
+        }
+
+        function selectAnswer(questionNum, answer, btnElement) {
+            if (isFinished) return;
+            
+            // Remove previous selection for this question
+            const questionRow = document.getElementById(`question-${questionNum}`);
+            questionRow.querySelectorAll('.answer-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            // Select current answer
+            btnElement.classList.add('selected');
+            currentAnswers[questionNum] = answer;
+        }
+
+        function finishPaper() {
+            if (isFinished) return;
+
+            isFinished = true;
+
+            // Stop the timer when the paper is finished
+            stopTimer();
+
+            // Calculate results
+            const totalQuestions = Object.keys(correctAnswers).length;
+            let correctCount = 0;
+            let incorrectCount = 0;
+
+            // Check each answer and apply styling
+            for (let i = 1; i <= totalQuestions; i++) {
+                const questionRow = document.getElementById(`question-${i}`);
+                const userAnswer = currentAnswers[i];
+                const correctAnswer = correctAnswers[i];
+
+                // Find the buttons
+                const buttons = questionRow.querySelectorAll('.answer-btn');
+
+                buttons.forEach(btn => {
+                    const btnAnswer = btn.textContent;
+
+                    if (btnAnswer === correctAnswer) {
+                        btn.classList.add('correct');
+                    }
+
+                    if (btnAnswer === userAnswer && userAnswer !== correctAnswer) {
+                        btn.classList.add('incorrect');
+                    }
+                });
+
+                // Color code the row
+                if (userAnswer === correctAnswer) {
+                    questionRow.classList.add('correct-answer');
+                    correctCount++;
+                } else if (userAnswer) {
+                    questionRow.classList.add('incorrect-answer');
+                    incorrectCount++;
+                }
+            }
+
+            // Update score display in the fixed header
+            document.getElementById('currentScore').textContent = `${correctCount}/${totalQuestions}`;
+            
+            // Update final time display
+            const finalMinutes = Math.floor(timerSeconds / 60);
+            const finalSecondsRemainder = timerSeconds % 60;
+            document.getElementById('finalTime').textContent = `${finalMinutes.toString().padStart(2, '0')}:${finalSecondsRemainder.toString().padStart(2, '0')}`;
+            
+            document.getElementById('scoreDisplay').style.display = 'block';
+
+            // Hide timer and show final score in header
+            document.getElementById('timer').style.display = 'none';
+
+            // Hide finish button, show results
+            document.getElementById('finishBtn').style.display = 'none';
+            document.getElementById('resultsDisplay').style.display = 'block';
+
+            // Save attempt
+            saveAttempt(correctCount, totalQuestions, correctCount, incorrectCount);
+        }
+
+        function saveAttempt(score, total, correct, incorrect) {
+            const attempts = JSON.parse(localStorage.getItem('mcq_attempts') || '{}');
+            const paperKey = `${currentSubject}_${currentPaper}`;
+            
+            if (!attempts[paperKey]) {
+                attempts[paperKey] = [];
+            }
+            
+            const attempt = {
+                date: new Date().toISOString(),
+                score: score,
+                total: total,
+                correct: correct,
+                incorrect: incorrect,
+                answers: { ...currentAnswers },
+                correctAnswers: { ...correctAnswers },
+                paperName: formatPaperName(currentPaper), // Add the formatted paper name
+                timeSpent: timerSeconds // Save the elapsed time in seconds
+            };
+            
+            attempts[paperKey].push(attempt);
+            localStorage.setItem('mcq_attempts', JSON.stringify(attempts));
+        }
+
+        function startNewAttempt() {
+            // Reset timer display and hide score
+            document.getElementById('timer').style.display = 'block';
+            document.getElementById('scoreDisplay').style.display = 'none';
+            
+            // Reset timer
+            timerSeconds = 0;
+            document.getElementById('timerMinutes').textContent = '00';
+            document.getElementById('timerSeconds').textContent = '00';
+            
+            // Start timer again
+            startTimer();
+            
+            createQuestionInterface(Object.keys(correctAnswers).length);
+        }
+
+        function goBack() {
+            document.getElementById('paperView').style.display = 'none';
+            document.getElementById('paperSelector').style.display = 'flex';
+            
+            // Hide mobile toggle button when leaving paper view
+            document.getElementById('mobileToggleBtn').style.display = 'none';
+            
+            // Reset PDF viewer
+            const pdfViewer = document.querySelector('.pdf-viewer');
+            pdfViewer.innerHTML = 'PDF VIEW';
+            
+            // Reset current selections
+            currentPaper = '';
+            currentAnswers = {};
+            correctAnswers = {};
+            isFinished = false;
+        }
+
+        function showTab(tab) {
+            // This function would handle tab switching for completed papers
+            // Implementation would depend on the specific requirements
+        }
+
+        // Search functionality
+        document.getElementById('subjectSearch').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const subjects = document.querySelectorAll('.subject-item');
+            
+            subjects.forEach(subject => {
+                const text = subject.textContent.toLowerCase();
+                subject.style.display = text.includes(searchTerm) ? 'block' : 'none';
+            });
+        });
+
+        document.getElementById('paperSearch').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const papers = document.querySelectorAll('.paper-item');
+            
+            papers.forEach(paper => {
+                const text = paper.textContent.toLowerCase();
+                paper.style.display = text.includes(searchTerm) ? 'block' : 'none';
+            });
+        });
+
+        // Debugging tool - display parsed marking scheme
+        function displayParsedMarkingScheme(scheme) {
+            const debugTool = document.getElementById('debugTool');
+            const parsedSchemeElement = document.getElementById('parsedMarkingScheme');
+            
+            parsedSchemeElement.textContent = scheme;
+            debugTool.style.display = 'block';
+        }
+
+        // Hide debugging tool
+        function hideDebugTool() {
+            const debugTool = document.getElementById('debugTool');
+            debugTool.style.display = 'none';
+        }
+
+        // Toggle debugging tool visibility
+        function toggleDebugTool() {
+            const debugTool = document.getElementById('debugTool');
+            const parsedSchemeElement = document.getElementById('parsedMarkingScheme');
+            
+            // Update debug info
+            const debugInfo = {
+                windowSize: `${window.innerWidth}x${window.innerHeight}`,
+                isMobileWidth: window.innerWidth <= 768,
+                currentMobileView,
+                paperViewVisible: document.getElementById('paperView').style.display === 'block',
+                mobileToggleVisible: document.getElementById('mobileToggleBtn').style.display !== 'none',
+                mobileToggleShouldBeVisible: window.innerWidth <= 768 && document.getElementById('paperView').style.display === 'block',
+                correctAnswers: Object.keys(correctAnswers).length
+            };
+            
+            parsedSchemeElement.textContent = JSON.stringify(debugInfo, null, 2);
+            debugTool.style.display = debugTool.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Example: Display parsed marking scheme on load
+        // This should be removed or commented out in production
+        // document.addEventListener('DOMContentLoaded', () => {
+        //     // For debugging: show parsed marking scheme of the first available paper
+        //     const firstSubject = Object.keys(availableSubjects)[0];
+        //     const firstPaper = availableSubjects[firstSubject].papers[0];
+        //     const msCode = firstPaper.replace('_qp_', '_ms_');
+        //     const markingScheme = availableMarkingSchemes[msCode];
+        //     
+        //     if (markingScheme) {
+        //         const schemeText = markingScheme;
+        //         displayParsedMarkingScheme(schemeText);
+        //     }
+        // });
+
+        function goHome() {
+            // Logic to navigate to the home view
+            document.getElementById('paperSelector').style.display = 'flex';
+            document.getElementById('paperView').style.display = 'none';
+            document.getElementById('attemptsTab').style.display = 'none';
+            // Hide mobile toggle button when not in paper view
+            document.getElementById('mobileToggleBtn').style.display = 'none';
+        }
+
+        function viewResults() {
+            // Redirect to results.html
+            window.location.href = 'results.html';
+        }
+
+        // Mobile view toggle functionality
+        let currentMobileView = 'pdf'; // 'pdf' or 'mcq'
+
+        function toggleMobileView() {
+            const pdfViewer = document.getElementById('pdfViewer');
+            const mcqSolver = document.getElementById('mcqSolver');
+            const toggleBtn = document.getElementById('mobileToggleBtn');
+            const toggleText = document.getElementById('toggleText');
+            
+            if (currentMobileView === 'pdf') {
+                // Switch to MCQ view
+                pdfViewer.style.display = 'none';
+                mcqSolver.style.display = 'flex';
+                mcqSolver.classList.add('active');
+                pdfViewer.classList.remove('active');
+                toggleText.textContent = '📄 PDF';
+                currentMobileView = 'mcq';
+            } else {
+                // Switch to PDF view
+                mcqSolver.style.display = 'none';
+                pdfViewer.style.display = 'flex';
+                pdfViewer.classList.add('active');
+                mcqSolver.classList.remove('active');
+                toggleText.textContent = '📝 MCQ';
+                currentMobileView = 'pdf';
+            }
+        }
+
+        // Initialize mobile view state
+        function initializeMobileView() {
+            console.log('Initializing mobile view, currentMobileView:', currentMobileView, 'Window width:', window.innerWidth); // Debug
+            
+            const paperView = document.getElementById('paperView');
+            const mobileToggleBtn = document.getElementById('mobileToggleBtn');
+            
+            // Only setup mobile view if width is <= 768px and we're in paper view
+            if (window.innerWidth <= 768 && paperView && paperView.style.display === 'block') {
+                const pdfViewer = document.getElementById('pdfViewer');
+                const mcqSolver = document.getElementById('mcqSolver');
+                const toggleText = document.getElementById('toggleText');
+                
+                console.log('Mobile view elements found:', { pdfViewer: !!pdfViewer, mcqSolver: !!mcqSolver, toggleText: !!toggleText }); // Debug
+                
+                // Show mobile toggle button
+                if (mobileToggleBtn) {
+                    mobileToggleBtn.style.display = 'block';
+                }
+                
+                if (pdfViewer && mcqSolver) {
+                    if (currentMobileView === 'pdf') {
+                        pdfViewer.style.display = 'flex';
+                        mcqSolver.style.display = 'none';
+                        pdfViewer.classList.add('active');
+                        mcqSolver.classList.remove('active');
+                        if (toggleText) toggleText.textContent = '📝 MCQ';
+                        console.log('Set to PDF view'); // Debug
+                    } else {
+                        pdfViewer.style.display = 'none';
+                        mcqSolver.style.display = 'flex';
+                        mcqSolver.classList.add('active');
+                        pdfViewer.classList.remove('active');
+                        if (toggleText) toggleText.textContent = '📄 PDF';
+                        console.log('Set to MCQ view'); // Debug
+                    }
+                }
+            } else {
+                // Hide mobile toggle button when not in mobile mode or not in paper view
+                if (mobileToggleBtn) {
+                    mobileToggleBtn.style.display = 'none';
+                }
+                
+                // On desktop, make sure both panels are visible if in paper view
+                if (window.innerWidth > 768 && paperView && paperView.style.display === 'block') {
+                    const pdfViewer = document.getElementById('pdfViewer');
+                    const mcqSolver = document.getElementById('mcqSolver');
+                    
+                    if (pdfViewer && mcqSolver) {
+                        pdfViewer.style.display = 'flex';
+                        mcqSolver.style.display = 'flex';
+                        pdfViewer.classList.remove('active');
+                        mcqSolver.classList.remove('active');
+                    }
+                }
+            }
+        }
+
+        // Handle window resize
+        function handleResize() {
+            const paperView = document.getElementById('paperView');
+            const mobileToggleBtn = document.getElementById('mobileToggleBtn');
+            
+            if (window.innerWidth > 768) {
+                // Desktop view - show both panels
+                const pdfViewer = document.getElementById('pdfViewer');
+                const mcqSolver = document.getElementById('mcqSolver');
+                
+                if (pdfViewer && mcqSolver) {
+                    pdfViewer.style.display = 'flex';
+                    mcqSolver.style.display = 'flex';
+                    pdfViewer.classList.remove('active');
+                    mcqSolver.classList.remove('active');
+                }
+                
+                // Hide mobile toggle button on desktop
+                mobileToggleBtn.style.display = 'none';
+            } else {
+                // Mobile view - initialize based on current state
+                initializeMobileView();
+                
+                // Show mobile toggle button only if in paper view and in mobile mode
+                if (paperView && paperView.style.display === 'block' && window.innerWidth <= 768) {
+                    mobileToggleBtn.style.display = 'block';
+                } else {
+                    mobileToggleBtn.style.display = 'none';
+                }
+            }
+        }
+
+        // Add event listeners for responsive behavior
+        window.addEventListener('resize', handleResize);
+        window.addEventListener('orientationchange', function() {
+            setTimeout(handleResize, 100);
+        });
+
+        // Touch gesture support for mobile
+        let touchStartX = 0;
+        let touchStartY = 0;
+
+        function handleTouchStart(e) {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        }
+
+        function handleTouchEnd(e) {
+            if (!touchStartX || !touchStartY) {
+                return;
+            }
+
+            const touchEndX = e.changedTouches[0].clientX;
+            const touchEndY = e.changedTouches[0].clientY;
+            const deltaX = touchStartX - touchEndX;
+            const deltaY = touchStartY - touchEndY;
+
+            // Only handle horizontal swipes and ignore if vertical swipe is larger
+            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+                if (window.innerWidth <= 768) {
+                    if (deltaX > 0 && currentMobileView === 'pdf') {
+                        // Swipe left - go to MCQ
+                        toggleMobileView();
+                    } else if (deltaX < 0 && currentMobileView === 'mcq') {
+                        // Swipe right - go to PDF
+                        toggleMobileView();
+                    }
+                }
+            }
+
+            touchStartX = 0;
+            touchStartY = 0;
+        }
+
+        // Enhanced DOMContentLoaded event handler
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM Content Loaded - initializing app'); // Debug
+            
+            // Load subjects
+            loadSubjectsFromDirectory();
+            
+            // Add touch event listeners to paper content
+            const paperContent = document.querySelector('.paper-content');
+            if (paperContent) {
+                paperContent.addEventListener('touchstart', handleTouchStart, { passive: true });
+                paperContent.addEventListener('touchend', handleTouchEnd, { passive: true });
+            }
+            
+            // Initialize mobile view on load
+            setTimeout(initializeMobileView, 100);
+            
+            // Ensure mobile toggle button is only visible in mobile mode and when in paper view
+            const paperView = document.getElementById('paperView');
+            const mobileToggleBtn = document.getElementById('mobileToggleBtn');
+            if (mobileToggleBtn) {
+                if (window.innerWidth <= 768 && paperView && paperView.style.display === 'block') {
+                    mobileToggleBtn.style.display = 'block';
+                } else {
+                    mobileToggleBtn.style.display = 'none';
+                }
+            }
+            
+            // Add debugging info
+            console.log('Initial window dimensions:', window.innerWidth, 'x', window.innerHeight);
+            console.log('Initial mobile view:', currentMobileView);
+            console.log('Mobile toggle button should be visible:', 
+                window.innerWidth <= 768 && paperView && paperView.style.display === 'block');
+        });
+    </script>
+</body>
+</html>
