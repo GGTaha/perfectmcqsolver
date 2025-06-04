@@ -1177,32 +1177,22 @@
 
         // Initialize the app
         document.addEventListener('DOMContentLoaded', function() {
-            loadSubjectsFromDirectory();
+            loadSubjectsFromServer();
         });
 
-        async function loadSubjectsFromDirectory() {
+        async function loadSubjectsFromServer() {
             try {
-                // For immediate testing, let's manually add the known subjects first
-                availableSubjects = {
-                    'Physics 9702': {
-                        papers: ['9702_s24_qp_11'] // We know this file exists
-                    }
-                };
-                
-                console.log('Manual subjects loaded:', availableSubjects); // Debug
-                
-                // Display subjects immediately - important to make sure we see Physics
-                displaySubjects();
-                console.log('After displaySubjects, subject list contains:', document.getElementById('subjectList').innerHTML);
-                
-                // Then try to discover more subjects dynamically
-                await discoverSubjects();
-            } catch (error) {
-                console.log('Could not access Subjects directory:', error.message);
-                // If discovery fails, we still have the manual subjects
-                if (Object.keys(availableSubjects).length === 0) {
-                    displayNoSubjectsMessage();
+                const response = await fetch('/api/getSubjects');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch subjects');
                 }
+
+                const subjects = await response.json();
+                availableSubjects = subjects;
+                displaySubjects();
+            } catch (error) {
+                console.error('Error loading subjects:', error);
+                displayNoSubjectsMessage();
             }
         }
 
@@ -2034,7 +2024,7 @@
             console.log('DOM Content Loaded - initializing app'); // Debug
             
             // Load subjects
-            loadSubjectsFromDirectory();
+            loadSubjectsFromServer();
             
             // Add touch event listeners to paper content
             const paperContent = document.querySelector('.paper-content');
